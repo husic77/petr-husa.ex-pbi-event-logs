@@ -6,7 +6,6 @@ import logging
 from datetime import date, timedelta
 import pandas as pd
 import requests
-# import msal
 from keboola.component.base import ComponentBase
 from keboola.component.exceptions import UserException
 
@@ -50,17 +49,20 @@ class Component(ComponentBase):
     def get_api_token(self):
         params = self.configuration.parameters
 
-        # client_id = params.get(KEY_CLIENT_ID)
-        # client_secret = params.get(KEY_PASSWORD)
-        # authority_url = params.get(KEY_AUTHORITY_URL)
-        # scope = ["https://analysis.windows.net/powerbi/api/.default"]
+        url = "https://login.microsoftonline.com/common/oauth2/token"
+        body = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "client_id": params.get(KEY_CLIENT_ID),
+            "scope": "openid",
+            "resource": "https://analysis.windows.net/powerbi/api",
+            "grant_type": "password",
+            "password": params.get(KEY_PASSWORD),
+            "username": params.get(KEY_USERNAME)
+        }
 
-        # Use MSAL to grab token
-        # app = msal.ConfidentialClientApplication(client_id, authority=authority_url, client_credential=client_secret)
-        # result = app.acquire_token_for_client(scopes=scope)
-
-        # self.access_token = result['access_token']
-        self.access_token = params.get(KEY_ACCESS_TOKEN)
+        response = requests.post(url, data=body).json()
+        self.access_token = response['access_token']
+        print(self.access_token)
 
     def run(self):
         """
@@ -68,16 +70,12 @@ class Component(ComponentBase):
         """
         key = [
             'Id',
-            'RecordType',
             'CreationTime',
             'Operation',
-            'OrganizationId',
-            'UserType',
             'UserKey',
             'Workload',
             'UserId',
             'ClientIP',
-            'UserAgent',
             'Activity',
             'ItemName',
             'WorkSpaceName',
@@ -87,24 +85,13 @@ class Component(ComponentBase):
             'ObjectId',
             'DatasetId',
             'ReportId',
-            'DataConnectivityMode',
+            'ArtifactId',
+            'ArtifactName',
+            'ArtifactKind',
             'IsSuccess',
-            'ReportType',
-            'RequestId',
             'ActivityId',
             'DistributionMethod',
             'ConsumptionMethod',
-            'DashboardName',
-            'DashboardId',
-            'Datasets',
-            'ModelsSnapshots',
-            'IsTenantAdminApi',
-            'GatewayClusters',
-            'LastRefreshTime',
-            'ImportId',
-            'ImportSource',
-            'ImportType',
-            'ImportDisplayName',
         ]
 
         table = self.create_out_table_definition('pbi_event_logs.csv', incremental=self.incremental,
@@ -113,6 +100,7 @@ class Component(ComponentBase):
         out_table_path = table.full_path
         logging.info(out_table_path)
 
+        self.activityDate = '2023-01-17'
         url = 'https://api.powerbi.com/v1.0/myorg/admin/activityevents'
         parameters = {
             "startDateTime": f"'{self.activityDate}T00:00:00'",
@@ -148,11 +136,12 @@ class Component(ComponentBase):
                 df2 = df2[df2.Activity != 'ExportActivityEvents']
             df = pd.concat([df, df2])
 
+        final_data = df[key].copy()
         # Set ID as Index of df
-        df = df.set_index('Id')
+        final_data = final_data.set_index('Id')
 
         # Save df as CSV
-        df.to_csv(out_table_path)
+        final_data.to_csv(out_table_path)
 
 
 """
