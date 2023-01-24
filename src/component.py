@@ -100,50 +100,53 @@ class Component(ComponentBase):
 
         out_table_path = table.full_path
         logging.info(out_table_path)
-
-        # self.activityDate = '2023-01-17'
-        url = 'https://api.powerbi.com/v1.0/myorg/admin/activityevents'
-        parameters = {
-            "startDateTime": f"'{self.activityDate}T00:00:00'",
-            "endDateTime": f"'{self.activityDate}T23:59:59'",
-        }
-
-        headers = {
-            "Authorization": f"Bearer {self.access_token}"
-        }
-
         df = pd.DataFrame(columns=key, dtype='string')
+        df.to_csv(out_table_path, mode='w', header=True, index=False)
 
-        api_call = requests.get(url=url, params=parameters, headers=headers)
-        api_call.raise_for_status()
+        for x in range(1, 8):
+            self.activityDate = date.today() - timedelta(days=x)
+            self.activityDate = self.activityDate.strftime("%Y-%m-%d")
+            # self.activityDate = '2023-01-17'
+            url = 'https://api.powerbi.com/v1.0/myorg/admin/activityevents'
+            parameters = {
+                "startDateTime": f"'{self.activityDate}T00:00:00'",
+                "endDateTime": f"'{self.activityDate}T23:59:59'",
+            }
 
-        # Set continuation URL
-        cont_url = api_call.json()['continuationUri']
+            headers = {
+                "Authorization": f"Bearer {self.access_token}"
+            }
 
-        # Get all Activities for first hour, save to dataframe (df1) and append to empty created df
-        result = api_call.json()['activityEventEntities']
-        df1 = pd.DataFrame(result, dtype='string')
-        if not df1.empty:
-            df1 = df1[df1.Activity != 'ExportActivityEvents']
-        pd.concat([df, df1])
+            api_call = requests.get(url=url, params=parameters, headers=headers)
+            api_call.raise_for_status()
 
-        # Call Continuation URL as long as results get one back to get all activities through the day
-        while cont_url is not None:
-            api_call_cont = requests.get(url=cont_url, headers=headers)
-            cont_url = api_call_cont.json()['continuationUri']
-            result = api_call_cont.json()['activityEventEntities']
-            df2 = pd.DataFrame(result, dtype='string')
-            if not df2.empty:
-                df2 = df2[df2.Activity != 'ExportActivityEvents']
-            df = pd.concat([df, df2])
+            # Set continuation URL
+            cont_url = api_call.json()['continuationUri']
 
-        final_data = df[key].copy()
-        final_data = final_data.astype(dtype="string")
-        # Set ID as Index of df
-        final_data = final_data.set_index('Id')
+            # Get all Activities for first hour, save to dataframe (df1) and append to empty created df
+            result = api_call.json()['activityEventEntities']
+            df1 = pd.DataFrame(result, dtype='string')
+            if not df1.empty:
+                df1 = df1[df1.Activity != 'ExportActivityEvents']
+            pd.concat([df, df1])
 
-        # Save df as CSV
-        final_data.to_csv(out_table_path)
+            # Call Continuation URL as long as results get one back to get all activities through the day
+            while cont_url is not None:
+                api_call_cont = requests.get(url=cont_url, headers=headers)
+                cont_url = api_call_cont.json()['continuationUri']
+                result = api_call_cont.json()['activityEventEntities']
+                df2 = pd.DataFrame(result, dtype='string')
+                if not df2.empty:
+                    df2 = df2[df2.Activity != 'ExportActivityEvents']
+                df = pd.concat([df, df2])
+
+            final_data = df[key].copy()
+            final_data = final_data.astype(dtype="string")
+            # Set ID as Index of df
+            final_data = final_data.set_index('Id')
+
+            # Save df as CSV
+            final_data.to_csv(out_table_path, mode='a', header=False)
 
 
 """
