@@ -4,6 +4,7 @@ Template Component main class.
 """
 import logging
 from datetime import date, timedelta
+
 import pandas as pd
 import requests
 from keboola.component.base import ComponentBase
