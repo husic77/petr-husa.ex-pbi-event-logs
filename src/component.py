@@ -62,7 +62,7 @@ class Component(ComponentBase):
 
         response = requests.post(url, data=body).json()
         self.access_token = response['access_token']
-        print(self.access_token)
+        # print(self.access_token)
 
     def run(self):
         """
@@ -111,7 +111,7 @@ class Component(ComponentBase):
             "Authorization": f"Bearer {self.access_token}"
         }
 
-        df = pd.DataFrame(columns=key)
+        df = pd.DataFrame(columns=key, dtype='string')
 
         api_call = requests.get(url=url, params=parameters, headers=headers)
         api_call.raise_for_status()
@@ -121,7 +121,7 @@ class Component(ComponentBase):
 
         # Get all Activities for first hour, save to dataframe (df1) and append to empty created df
         result = api_call.json()['activityEventEntities']
-        df1 = pd.DataFrame(result)
+        df1 = pd.DataFrame(result, dtype='string')
         if not df1.empty:
             df1 = df1[df1.Activity != 'ExportActivityEvents']
         pd.concat([df, df1])
@@ -131,7 +131,7 @@ class Component(ComponentBase):
             api_call_cont = requests.get(url=cont_url, headers=headers)
             cont_url = api_call_cont.json()['continuationUri']
             result = api_call_cont.json()['activityEventEntities']
-            df2 = pd.DataFrame(result)
+            df2 = pd.DataFrame(result, dtype='string')
             if not df2.empty:
                 df2 = df2[df2.Activity != 'ExportActivityEvents']
             df = pd.concat([df, df2])
