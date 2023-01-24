@@ -100,7 +100,7 @@ class Component(ComponentBase):
         out_table_path = table.full_path
         logging.info(out_table_path)
 
-        self.activityDate = '2023-01-17'
+        # self.activityDate = '2023-01-17'
         url = 'https://api.powerbi.com/v1.0/myorg/admin/activityevents'
         parameters = {
             "startDateTime": f"'{self.activityDate}T00:00:00'",
