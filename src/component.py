@@ -140,7 +140,7 @@ class Component(ComponentBase):
         final_data = final_data.astype(dtype="string")
         # Set ID as Index of df
         final_data = final_data.set_index('Id')
-        print(final_data.info())
+
         # Save df as CSV
         final_data.to_csv(out_table_path)
 
