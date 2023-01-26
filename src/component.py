@@ -107,7 +107,7 @@ class Component(ComponentBase):
             df = pd.DataFrame(columns=key, dtype='string')
             self.activityDate = date.today() - timedelta(days=x)
             self.activityDate = self.activityDate.strftime("%Y-%m-%d")
-            #self.activityDate = '2022-07-01'
+            
             url = 'https://api.powerbi.com/v1.0/myorg/admin/activityevents'
             parameters = {
                 "startDateTime": f"'{self.activityDate}T00:00:00'",
