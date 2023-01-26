@@ -63,7 +63,7 @@ class Component(ComponentBase):
 
         response = requests.post(url, data=body).json()
         self.access_token = response['access_token']
-        print(self.access_token)
+#         print(self.access_token)
 
     def run(self):
         """
