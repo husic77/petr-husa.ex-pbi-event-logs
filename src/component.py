@@ -63,7 +63,7 @@ class Component(ComponentBase):
 
         response = requests.post(url, data=body).json()
         self.access_token = response['access_token']
-        # print(self.access_token)
+        print(self.access_token)
 
     def run(self):
         """
@@ -104,9 +104,10 @@ class Component(ComponentBase):
         df.to_csv(out_table_path, mode='w', header=True, index=False)
 
         for x in range(1, 8):
+            df = pd.DataFrame(columns=key, dtype='string')
             self.activityDate = date.today() - timedelta(days=x)
             self.activityDate = self.activityDate.strftime("%Y-%m-%d")
-            # self.activityDate = '2023-01-17'
+            #self.activityDate = '2022-07-01'
             url = 'https://api.powerbi.com/v1.0/myorg/admin/activityevents'
             parameters = {
                 "startDateTime": f"'{self.activityDate}T00:00:00'",
@@ -147,6 +148,7 @@ class Component(ComponentBase):
 
             # Save df as CSV
             final_data.to_csv(out_table_path, mode='a', header=False)
+            print(self.activityDate)
 
 
 """
